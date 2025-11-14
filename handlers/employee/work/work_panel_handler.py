@@ -98,11 +98,14 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
 
     logger.info(f"🔵 show_task_work_panel: task_id={task_id}, telegram_id={user_telegram_id}")
 
-    # حذف job های قبلی برای این chat
-    current_jobs = context.job_queue.get_jobs_by_name(f'refresh_panel_{query.message.chat_id}')
-    for job in current_jobs:
-        job.schedule_removal()
-        logger.info(f"🗑️ Removed old refresh job")
+    # حذف job های قبلی برای این chat (فقط اگر job_queue فعال باشد)
+    if context.job_queue:
+        current_jobs = context.job_queue.get_jobs_by_name(f'refresh_panel_{query.message.chat_id}')
+        for job in current_jobs:
+            job.schedule_removal()
+            logger.info(f"🗑️ Removed old refresh job")
+    else:
+        logger.warning("⚠️ job_queue is not available, auto-refresh will be disabled")
 
     # دریافت اطلاعات کاربر
     user = UserModel.get_by_telegram_id(user_telegram_id)
@@ -190,8 +193,8 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
         parse_mode='Markdown'
     )
 
-    # اضافه کردن job برای auto-refresh (فقط اگر کار فعال است)
-    if is_active:
+    # اضافه کردن job برای auto-refresh (فقط اگر کار فعال است و job_queue موجود باشد)
+    if is_active and context.job_queue:
         logger.info(f"⏰ Starting auto-refresh job for task {task_id}")
         context.job_queue.run_repeating(
             auto_refresh_work_panel,
@@ -206,6 +209,8 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
             }
         )
         logger.info(f"✅ Auto-refresh job started (every 60 seconds)")
+    elif is_active and not context.job_queue:
+        logger.warning("⚠️ Task is active but job_queue is not available. Auto-refresh disabled.")
 
 
 def get_active_task_id(user_id: int) -> int:
