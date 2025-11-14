@@ -60,6 +60,7 @@ from handlers.admin.manage import (
     manage_by_employee,
     show_employee_tasks_by_category,
     show_tasks_by_employee_category,
+    show_unassigned_tasks,
     manage_by_category,
     show_category_tasks,
     manage_by_status,
@@ -243,6 +244,7 @@ def main() -> None:
 
     # مدیریت بر اساس کارمند
     application.add_handler(CallbackQueryHandler(manage_by_employee, pattern='^manage_by_employee$'))
+    application.add_handler(CallbackQueryHandler(show_unassigned_tasks, pattern='^unassigned_tasks$'))
     application.add_handler(CallbackQueryHandler(show_employee_tasks_by_category, pattern='^emp_tasks_'))
     application.add_handler(CallbackQueryHandler(show_tasks_by_employee_category, pattern='^emp_cat_'))
 

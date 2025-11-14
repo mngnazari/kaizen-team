@@ -643,3 +643,60 @@ class TaskService:
             return []
         finally:
             conn.close()
+
+    @staticmethod
+    def count_unassigned_tasks() -> int:
+        """
+        شمارش کارهای تخصیص داده نشده
+
+        Returns:
+            تعداد کارهایی که assigned_to_id آنها NULL است
+        """
+        conn = create_connection()
+        if not conn:
+            return 0
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT COUNT(*) FROM Tasks
+                WHERE assigned_to_id IS NULL
+            """)
+            return cursor.fetchone()[0]
+
+        except Exception as e:
+            print(f"❌ خطا در شمارش کارهای تخصیص نیافته: {e}")
+            return 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_unassigned_tasks() -> List[Dict[str, Any]]:
+        """
+        دریافت کارهای تخصیص داده نشده
+
+        Returns:
+            لیست کارهایی که assigned_to_id آنها NULL است
+        """
+        conn = create_connection()
+        if not conn:
+            return []
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT t.*, c.name as category_name
+                FROM Tasks t
+                LEFT JOIN Categories c ON t.category_id = c.id
+                WHERE t.assigned_to_id IS NULL
+                ORDER BY t.creation_date DESC
+            """)
+
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
+        except Exception as e:
+            print(f"❌ خطا در دریافت کارهای تخصیص نیافته: {e}")
+            return []
+        finally:
+            conn.close()

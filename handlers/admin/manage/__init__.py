@@ -8,7 +8,8 @@ from .manage_menu_handler import show_manage_tasks_menu
 from .manage_by_employee_handler import (
     manage_by_employee,
     show_employee_tasks_by_category,
-    show_tasks_by_employee_category
+    show_tasks_by_employee_category,
+    show_unassigned_tasks
 )
 from .manage_by_category_handler import (
     manage_by_category,
@@ -30,6 +31,7 @@ __all__ = [
     'manage_by_employee',
     'show_employee_tasks_by_category',
     'show_tasks_by_employee_category',
+    'show_unassigned_tasks',
     'manage_by_category',
     'show_category_tasks',
     'manage_by_status',

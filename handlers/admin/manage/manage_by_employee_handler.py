@@ -25,6 +25,13 @@ async def manage_by_employee(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     keyboard = []
 
+    # دکمه کارهای تخصیص داده نشده
+    unassigned_count = TaskService.count_unassigned_tasks()
+    keyboard.append([InlineKeyboardButton(
+        f"📋 تخصیص داده نشده ({unassigned_count})",
+        callback_data="unassigned_tasks"
+    )])
+
     for employee in employees:
         emp_id = employee.get('id')
         name = employee.get('name')
@@ -90,6 +97,53 @@ async def show_employee_tasks_by_category(update: Update, context: ContextTypes.
     await query.edit_message_text(
         f"📂 **کارهای {employee_name}**\n\n"
         f"دسته‌بندی مورد نظر را انتخاب کنید:",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode='Markdown'
+    )
+
+
+async def show_unassigned_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """نمایش کارهای تخصیص داده نشده"""
+    query = update.callback_query
+    await query.answer()
+
+    # دریافت کارهای تخصیص داده نشده
+    tasks = TaskService.get_unassigned_tasks()
+
+    if not tasks:
+        await query.edit_message_text(
+            "✅ همه کارها تخصیص داده شده‌اند!",
+            reply_markup=InlineKeyboardMarkup([[
+                InlineKeyboardButton("🔙 بازگشت", callback_data="manage_by_employee")
+            ]])
+        )
+        return
+
+    status_emoji = {
+        'pending': '⏳',
+        'in_progress': '🔄',
+        'completed': '✅',
+        'on_hold': '⏸',
+        'archived': '🗄'
+    }
+
+    keyboard = []
+    for task in tasks:
+        task_id = task.get('id')
+        title = task.get('title')
+        status = task.get('status')
+        category_name = task.get('category_name', 'بدون دسته‌بندی')
+        emoji = status_emoji.get(status, '❓')
+
+        button_text = f"{emoji} {title} ({category_name})"
+        keyboard.append([InlineKeyboardButton(button_text, callback_data=f"view_task_{task_id}")])
+
+    keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data="manage_by_employee")])
+
+    await query.edit_message_text(
+        f"📋 **کارهای تخصیص داده نشده**\n\n"
+        f"تعداد: {len(tasks)}\n\n"
+        f"برای تخصیص، روی کار کلیک کنید:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
     )

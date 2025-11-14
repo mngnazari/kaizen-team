@@ -215,7 +215,10 @@ async def get_duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ مدت زمان: {duration} دقیقه\n\n"
-        f"⭐ **اهمیت کار** را وارد کنید (عدد 1 تا 10):\n\n"
+        f"⭐ **اهمیت کار** را وارد کنید:\n"
+        f"1 = بسیار مهم\n"
+        f"2 = متوسط\n"
+        f"3 = کم اهمیت\n\n"
         f"برای رد کردن، دکمه زیر را بزنید:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
@@ -234,7 +237,10 @@ async def skip_duration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     await query.edit_message_text(
-        "⭐ **اهمیت کار** را وارد کنید (عدد 1 تا 10):\n\n"
+        "⭐ **اهمیت کار** را وارد کنید:\n"
+        "1 = بسیار مهم\n"
+        "2 = متوسط\n"
+        "3 = کم اهمیت\n\n"
         "برای رد کردن، دکمه زیر را بزنید:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
@@ -246,8 +252,8 @@ async def get_importance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """دریافت اهمیت"""
     importance = update.message.text.strip()
 
-    if not importance.isdigit() or not (1 <= int(importance) <= 10):
-        await update.message.reply_text("❌ لطفاً عددی بین 1 تا 10 وارد کنید.")
+    if not importance.isdigit() or not (1 <= int(importance) <= 3):
+        await update.message.reply_text("❌ لطفاً عددی بین 1 تا 3 وارد کنید.")
         return IMPORTANCE
 
     context.user_data['importance'] = int(importance)
@@ -259,7 +265,10 @@ async def get_importance(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         f"✅ اهمیت: {importance}\n\n"
-        f"🔥 **اولویت کار** را وارد کنید (عدد 1 تا 10):\n\n"
+        f"🔥 **اولویت کار** را وارد کنید:\n"
+        f"1 = اولویت بالا\n"
+        f"2 = اولویت متوسط\n"
+        f"3 = اولویت پایین\n\n"
         f"برای رد کردن، دکمه زیر را بزنید:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
@@ -278,7 +287,10 @@ async def skip_importance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
 
     await query.edit_message_text(
-        "🔥 **اولویت کار** را وارد کنید (عدد 1 تا 10):\n\n"
+        "🔥 **اولویت کار** را وارد کنید:\n"
+        "1 = اولویت بالا\n"
+        "2 = اولویت متوسط\n"
+        "3 = اولویت پایین\n\n"
         "برای رد کردن، دکمه زیر را بزنید:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
@@ -290,8 +302,8 @@ async def get_priority(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """دریافت اولویت"""
     priority = update.message.text.strip()
 
-    if not priority.isdigit() or not (1 <= int(priority) <= 10):
-        await update.message.reply_text("❌ لطفاً عددی بین 1 تا 10 وارد کنید.")
+    if not priority.isdigit() or not (1 <= int(priority) <= 3):
+        await update.message.reply_text("❌ لطفاً عددی بین 1 تا 3 وارد کنید.")
         return PRIORITY
 
     context.user_data['priority'] = int(priority)
@@ -306,12 +318,11 @@ async def get_priority(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for cat in categories:
         keyboard.append([InlineKeyboardButton(cat['name'], callback_data=f"cat_{cat['id']}")])
 
-    keyboard.append([InlineKeyboardButton("⏭️ رد شدن", callback_data="skip_category")])
     keyboard.append([InlineKeyboardButton("❌ لغو", callback_data="cancel_task")])
 
     await update.message.reply_text(
         f"✅ اولویت: {priority}\n\n"
-        f"📂 **دسته‌بندی کار** را انتخاب کنید:",
+        f"📂 **دسته‌بندی کار** را انتخاب کنید (اجباری):",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
     )
@@ -333,11 +344,10 @@ async def skip_priority(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for cat in categories:
         keyboard.append([InlineKeyboardButton(cat['name'], callback_data=f"cat_{cat['id']}")])
 
-    keyboard.append([InlineKeyboardButton("⏭️ رد شدن", callback_data="skip_category")])
     keyboard.append([InlineKeyboardButton("❌ لغو", callback_data="cancel_task")])
 
     await query.edit_message_text(
-        "📂 **دسته‌بندی کار** را انتخاب کنید:",
+        "📂 **دسته‌بندی کار** را انتخاب کنید (اجباری):",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
     )
@@ -362,39 +372,73 @@ async def get_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for emp in employees:
         keyboard.append([InlineKeyboardButton(emp['name'], callback_data=f"emp_{emp['id']}")])
 
+    keyboard.append([InlineKeyboardButton("⏭️ رد شدن (تخصیص بعداً)", callback_data="skip_employee")])
     keyboard.append([InlineKeyboardButton("❌ لغو", callback_data="cancel_task")])
 
     await query.edit_message_text(
-        "👤 **کارمند** را برای انجام این کار انتخاب کنید:",
+        "👤 **کارمند** را برای انجام این کار انتخاب کنید:\n\n"
+        "(می‌توانید بعداً کارمند را تخصیص دهید)",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
     )
     return ASSIGN_EMPLOYEE
 
 
-async def skip_category(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """رد کردن دسته‌بندی"""
+async def skip_employee(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """رد کردن تخصیص کارمند - ذخیره کار بدون کارمند"""
     query = update.callback_query
     await query.answer()
 
-    employees = UserService.get_all_employees()
+    # ایجاد کار بدون کارمند
+    task_data = {
+        'title': context.user_data.get('title'),
+        'description': context.user_data.get('description'),
+        'results': context.user_data.get('results'),
+        'duration': context.user_data.get('duration'),
+        'importance': context.user_data.get('importance'),
+        'priority': context.user_data.get('priority'),
+        'category_id': context.user_data.get('category_id'),
+        'assigned_to_id': None,  # بدون کارمند
+        'assigned_by_id': ADMIN_ID
+    }
 
-    if not employees:
-        await query.edit_message_text("❌ هیچ کارمندی موجود نیست.")
-        return ConversationHandler.END
+    task_id = TaskService.create_task(task_data)
 
-    keyboard = []
-    for emp in employees:
-        keyboard.append([InlineKeyboardButton(emp['name'], callback_data=f"emp_{emp['id']}")])
+    if task_id:
+        # ✅ ذخیره فایل‌های توضیحات
+        for file_data in context.user_data.get('description_files', []):
+            FileService.add_section_file(
+                task_id,
+                'description',
+                file_data['file_id'],
+                file_data['file_type']
+            )
 
-    keyboard.append([InlineKeyboardButton("❌ لغو", callback_data="cancel_task")])
+        # ✅ ذخیره فایل‌های نتایج
+        for file_data in context.user_data.get('results_files', []):
+            FileService.add_section_file(
+                task_id,
+                'results',
+                file_data['file_id'],
+                file_data['file_type']
+            )
 
-    await query.edit_message_text(
-        "👤 **کارمند** را برای انجام این کار انتخاب کنید:",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode='Markdown'
-    )
-    return ASSIGN_EMPLOYEE
+        await query.edit_message_text(
+            f"✅ **کار با موفقیت ایجاد شد!**\n\n"
+            f"📋 عنوان: {task_data['title']}\n"
+            f"👤 وضعیت: تخصیص داده نشده\n\n"
+            f"می‌توانید بعداً از بخش 'مدیریت کارها' آن را به کارمند تخصیص دهید.",
+            reply_markup=get_back_to_menu_keyboard(),
+            parse_mode='Markdown'
+        )
+    else:
+        await query.edit_message_text(
+            "❌ خطا در ایجاد کار!",
+            reply_markup=get_back_to_menu_keyboard()
+        )
+
+    context.user_data.clear()
+    return ConversationHandler.END
 
 
 async def assign_employee(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -506,11 +550,11 @@ task_creation_conv_handler = ConversationHandler(
             CallbackQueryHandler(skip_priority, pattern='^skip_priority$')
         ],
         CATEGORY: [
-            CallbackQueryHandler(get_category, pattern='^cat_'),
-            CallbackQueryHandler(skip_category, pattern='^skip_category$')
+            CallbackQueryHandler(get_category, pattern='^cat_')
         ],
         ASSIGN_EMPLOYEE: [
-            CallbackQueryHandler(assign_employee, pattern='^emp_')
+            CallbackQueryHandler(assign_employee, pattern='^emp_'),
+            CallbackQueryHandler(skip_employee, pattern='^skip_employee$')
         ]
     },
     fallbacks=[
