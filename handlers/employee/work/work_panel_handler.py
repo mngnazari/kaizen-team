@@ -195,8 +195,8 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
         logger.info(f"⏰ Starting auto-refresh job for task {task_id}")
         context.job_queue.run_repeating(
             auto_refresh_work_panel,
-            interval=10,  # هر 10 ثانیه
-            first=10,  # اولین refresh بعد از 10 ثانیه
+            interval=60,  # هر 60 ثانیه (1 دقیقه)
+            first=60,  # اولین refresh بعد از 1 دقیقه
             chat_id=query.message.chat_id,
             name=f'refresh_panel_{query.message.chat_id}',
             data={
@@ -205,7 +205,7 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
                 'user_id': user_id
             }
         )
-        logger.info(f"✅ Auto-refresh job started (every 10 seconds)")
+        logger.info(f"✅ Auto-refresh job started (every 60 seconds)")
 
 
 def get_active_task_id(user_id: int) -> int:
