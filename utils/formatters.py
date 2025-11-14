@@ -8,10 +8,10 @@
 def format_time(minutes: int) -> str:
     """
     تبدیل دقیقه به فرمت ساعت:دقیقه
-    
+
     Args:
         minutes: تعداد دقایق
-        
+
     Returns:
         str: فرمت شده (مثلاً "2س 30د" یا "45د")
     """
@@ -20,6 +20,28 @@ def format_time(minutes: int) -> str:
     hours = minutes // 60
     mins = minutes % 60
     return f"{hours}س {mins}د" if mins > 0 else f"{hours}س"
+
+
+def format_time_as_hours(minutes: int) -> str:
+    """
+    تبدیل دقیقه به فرمت ساعت اعشاری
+
+    Args:
+        minutes: تعداد دقایق
+
+    Returns:
+        str: فرمت شده (مثلاً "1.5 ساعت" یا "2 ساعت")
+    """
+    if minutes == 0:
+        return "0 ساعت"
+
+    hours = minutes / 60
+
+    # اگر عدد صحیح است
+    if hours == int(hours):
+        return f"{int(hours)} ساعت"
+    else:
+        return f"{hours:.1f} ساعت"
 
 
 def format_task_status(status: str) -> str:

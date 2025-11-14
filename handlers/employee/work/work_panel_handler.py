@@ -7,7 +7,7 @@ from database.models.user import UserModel
 from services.task_service import TaskService
 from services.work_service import WorkService
 from utils.keyboards import get_task_work_keyboard
-from utils.formatters import format_time
+from utils.formatters import format_time, format_time_as_hours
 
 
 async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -42,10 +42,11 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
         FROM TaskActivities
         WHERE task_id = ? AND user_id = ?
     """, (task_id, user_id))
-    spent_time = cursor.fetchone()[0]
+    result = cursor.fetchone()
+    spent_time = result[0] if result and result[0] is not None and result[0] >= 0 else 0
     conn.close()
 
-    # محاسبه زمان تخصیصی
+    # محاسبه زمان تخصیصی (به دقیقه)
     allocated_time = int(task.get('duration', 0)) if task.get('duration') else 0
 
     # دریافت تعداد داده‌های ثبت شده
@@ -55,8 +56,8 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     self_score = WorkService.get_self_score(task_id, user_id)
 
     # ساخت متن پنل
-    spent_formatted = format_time(spent_time)
-    allocated_formatted = format_time(allocated_time) if allocated_time > 0 else "تعیین نشده"
+    spent_formatted = f"{spent_time}د"  # زمان سپری شده به دقیقه
+    allocated_formatted = format_time_as_hours(allocated_time) if allocated_time > 0 else "تعیین نشده"
 
     message_text = (
         f"📋 **{task.get('title')}**\n\n"

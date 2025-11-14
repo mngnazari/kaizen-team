@@ -62,8 +62,8 @@ def get_employee_main_keyboard():
     """کیبورد اصلی کارمند"""
     keyboard = [
         [
-            InlineKeyboardButton("📝 کارها", callback_data="list_tasks"),
-            InlineKeyboardButton("🗂 آرشیو کارها", callback_data="archive_tasks")
+            InlineKeyboardButton("🗂 آرشیو کارها", callback_data="archive_tasks"),
+            InlineKeyboardButton("📝 کارها", callback_data="list_tasks")
         ],
         [
             InlineKeyboardButton("⏱ مدیریت زمان", callback_data="time_tracking_menu")
@@ -89,28 +89,39 @@ def get_back_to_employee_menu_keyboard():
 def get_task_work_keyboard(task_id, allocated_time, spent_time):
     """
     کیبورد پنل کار
-    
+
     Args:
         task_id: آیدی کار
         allocated_time: زمان تخصیصی (دقیقه)
         spent_time: زمان سپری شده (دقیقه)
     """
-    from utils.formatters import format_time
-    
-    spent_formatted = format_time(spent_time)
-    allocated_formatted = format_time(allocated_time) if allocated_time > 0 else "تعیین نشده"
-    
+    from utils.formatters import format_time_as_hours
+
+    spent_formatted = f"{spent_time}د"
+    allocated_formatted = format_time_as_hours(allocated_time) if allocated_time > 0 else "تعیین نشده"
+
     keyboard = [
         [InlineKeyboardButton("🚀 شروع کار", callback_data=f"start_work_{task_id}")],
         [
             InlineKeyboardButton(f"⏱️ زمان کل: {allocated_formatted}", callback_data=f"work_panel_{task_id}"),
             InlineKeyboardButton(f"⌚ زمان سپری شده: {spent_formatted}", callback_data=f"work_panel_{task_id}")
         ],
-        [InlineKeyboardButton("📚 ثبت دانش", callback_data=f"knowledge_{task_id}")],
-        [InlineKeyboardButton("💡 پیشنهاد", callback_data=f"suggestion_{task_id}")],
-        [InlineKeyboardButton("📋 نتایج کار", callback_data=f"results_{task_id}")],
-        [InlineKeyboardButton("⭐ امتیاز به خود", callback_data=f"self_score_{task_id}")],
-        [InlineKeyboardButton("✅ تحویل کار", callback_data=f"submit_{task_id}")],
+        [
+            InlineKeyboardButton("📚 ثبت دانش", callback_data=f"knowledge_{task_id}"),
+            InlineKeyboardButton("💡 پیشنهاد", callback_data=f"suggestion_{task_id}")
+        ],
+        [
+            InlineKeyboardButton("📋 نتایج کار", callback_data=f"results_{task_id}"),
+            InlineKeyboardButton("⭐ امتیاز به خود", callback_data=f"self_score_{task_id}")
+        ],
+        [
+            InlineKeyboardButton("🍽 نهار و نماز", callback_data=f"activity_lunch_prayer"),
+            InlineKeyboardButton("☕ استراحت", callback_data=f"activity_break")
+        ],
+        [
+            InlineKeyboardButton("✅ تحویل کار", callback_data=f"submit_{task_id}"),
+            InlineKeyboardButton("⏹ پایان روز کاری", callback_data=f"end_work_day")
+        ],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_tasks_list")]
     ]
     return InlineKeyboardMarkup(keyboard)
