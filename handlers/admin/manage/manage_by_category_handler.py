@@ -12,7 +12,7 @@ async def manage_by_category(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
 
     # دریافت تمام دسته‌بندی‌ها با آمار
-    categories = CategoryModel.get_all_categories()
+    categories = CategoryModel.get_all()
 
     if not categories:
         await query.edit_message_text(
