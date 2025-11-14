@@ -60,9 +60,13 @@ from handlers.admin.manage import (
     manage_by_employee,
     show_employee_tasks_by_category,
     show_tasks_by_employee_category,
+    manage_by_category,
+    show_category_tasks,
+    manage_by_status,
+    show_tasks_by_status,
     view_task_details_admin,
     assign_task_to_employee,
-    confirm_assign_task,  # ✅ اضافه شد
+    confirm_assign_task,
     change_task_status
 )
 # ایمپورت هندلرها - نیروها
@@ -236,9 +240,19 @@ def main() -> None:
 
     # --- مدیریت کارها ---
     application.add_handler(CallbackQueryHandler(show_manage_tasks_menu, pattern='^manage_tasks$'))
+
+    # مدیریت بر اساس کارمند
     application.add_handler(CallbackQueryHandler(manage_by_employee, pattern='^manage_by_employee$'))
     application.add_handler(CallbackQueryHandler(show_employee_tasks_by_category, pattern='^emp_tasks_'))
     application.add_handler(CallbackQueryHandler(show_tasks_by_employee_category, pattern='^emp_cat_'))
+
+    # مدیریت بر اساس دسته‌بندی
+    application.add_handler(CallbackQueryHandler(manage_by_category, pattern='^manage_by_category$'))
+    application.add_handler(CallbackQueryHandler(show_category_tasks, pattern='^cat_tasks_'))
+
+    # مدیریت بر اساس وضعیت
+    application.add_handler(CallbackQueryHandler(manage_by_status, pattern='^manage_by_status$'))
+    application.add_handler(CallbackQueryHandler(show_tasks_by_status, pattern='^status_list_'))
 
     # --- جزئیات و تخصیص کار ---
     application.add_handler(CallbackQueryHandler(view_task_details_admin, pattern='^view_task_'))

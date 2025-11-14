@@ -2,6 +2,7 @@
 
 from database.models.task import TaskModel
 from database.models.category import CategoryModel
+from database.connection import create_connection
 from typing import Optional, List, Dict, Any
 
 
@@ -521,7 +522,7 @@ class TaskService:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT COUNT(*) FROM Tasks
-                WHERE assigned_to_id = ? 
+                WHERE assigned_to_id = ?
                 AND status = 'completed'
                 AND DATE(completion_date) = ?
             """, (employee_id, date))
@@ -531,5 +532,114 @@ class TaskService:
         except Exception as e:
             print(f"❌ خطا در شمارش کارها: {e}")
             return 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_category_task_statistics(category_id: int) -> Dict[str, int]:
+        """
+        دریافت آمار کارهای یک دسته‌بندی
+
+        Args:
+            category_id: آیدی دسته‌بندی
+
+        Returns:
+            dict: {'total': ..., 'finished': ...}
+        """
+        conn = create_connection()
+        if not conn:
+            return {'total': 0, 'finished': 0}
+
+        try:
+            cursor = conn.cursor()
+
+            # تعداد کل کارها
+            cursor.execute("""
+                SELECT COUNT(*) FROM Tasks
+                WHERE category_id = ?
+            """, (category_id,))
+            total = cursor.fetchone()[0]
+
+            # تعداد کارهای خاتمه یافته
+            cursor.execute("""
+                SELECT COUNT(*) FROM Tasks
+                WHERE category_id = ? AND status = 'archived'
+            """, (category_id,))
+            finished = cursor.fetchone()[0]
+
+            return {
+                'total': total,
+                'finished': finished
+            }
+
+        except Exception as e:
+            print(f"❌ خطا در دریافت آمار دسته‌بندی: {e}")
+            return {'total': 0, 'finished': 0}
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_tasks_count_by_status() -> Dict[str, int]:
+        """
+        دریافت تعداد کارها به تفکیک وضعیت
+
+        Returns:
+            dict: {'pending': ..., 'in_progress': ..., 'completed': ..., 'on_hold': ..., 'archived': ...}
+        """
+        conn = create_connection()
+        if not conn:
+            return {}
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT status, COUNT(*) as count
+                FROM Tasks
+                GROUP BY status
+            """)
+
+            result = {}
+            for row in cursor.fetchall():
+                result[row['status']] = row['count']
+
+            return result
+
+        except Exception as e:
+            print(f"❌ خطا در دریافت آمار وضعیت‌ها: {e}")
+            return {}
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_tasks_by_category(category_id: int) -> List[Dict[str, Any]]:
+        """
+        دریافت تمام کارهای یک دسته‌بندی
+
+        Args:
+            category_id: آیدی دسته‌بندی
+
+        Returns:
+            لیست کارها با اطلاعات کامل
+        """
+        conn = create_connection()
+        if not conn:
+            return []
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT t.*, u.name as assigned_to_name
+                FROM Tasks t
+                LEFT JOIN Users u ON t.assigned_to_id = u.id
+                WHERE t.category_id = ?
+                ORDER BY t.creation_date DESC
+            """, (category_id,))
+
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+
+        except Exception as e:
+            print(f"❌ خطا در دریافت کارهای دسته‌بندی: {e}")
+            return []
         finally:
             conn.close()

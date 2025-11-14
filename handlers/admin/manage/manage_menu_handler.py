@@ -22,18 +22,3 @@ async def show_manage_tasks_menu(update: Update, context: ContextTypes.DEFAULT_T
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode='Markdown'
     )
-
-
-async def manage_placeholder(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """پیام موقت برای بخش‌های در حال توسعه"""
-    query = update.callback_query
-    await query.answer()
-
-    keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data="manage_tasks")]]
-
-    await query.edit_message_text(
-        "🚧 **این بخش در حال توسعه است**\n\n"
-        "به زودی این امکان اضافه خواهد شد.",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode='Markdown'
-    )
