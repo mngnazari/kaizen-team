@@ -33,19 +33,32 @@ async def auto_refresh_work_panel(context: ContextTypes.DEFAULT_TYPE):
         conn = create_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT COALESCE(SUM(
-                CASE
-                    WHEN end_time IS NULL THEN
-                        CAST((JULIANDAY(datetime('now')) - JULIANDAY(start_time)) * 24 * 60 AS INTEGER)
-                    ELSE
-                        duration_minutes
-                END
-            ), 0) as total_minutes
+            SELECT id, start_time, end_time, duration_minutes, is_active
             FROM WorkSessions
             WHERE session_type = 'task' AND reference_id = ? AND user_id = ?
         """, (task_id, user_id))
-        result = cursor.fetchone()
-        spent_time = result[0] if result and result[0] is not None and result[0] >= 0 else 0
+        all_sessions = cursor.fetchall()
+
+        # محاسبه زمان سپری شده به صورت دستی
+        spent_time = 0
+        for session in all_sessions:
+            session_id, start_time, end_time, duration_minutes, is_active = session
+
+            if end_time is None:
+                # Session فعال - محاسبه زمان سپری شده تا الان
+                if start_time:
+                    try:
+                        start_dt = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+                        now_dt = datetime.now()
+                        elapsed = int((now_dt - start_dt).total_seconds() / 60)
+                        spent_time += elapsed
+                    except Exception as e:
+                        logger.error(f"❌ Error in auto-refresh time calc: {e}")
+            else:
+                # Session تمام شده - استفاده از duration_minutes
+                if duration_minutes and duration_minutes > 0:
+                    spent_time += duration_minutes
+
         conn.close()
 
         allocated_time = int(task.get('duration', 0)) if task.get('duration') else 0
@@ -128,7 +141,7 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     conn = create_connection()
     cursor = conn.cursor()
 
-    # ابتدا ببینیم چند WorkSession برای این کار وجود دارد
+    # دریافت تمام session های این کار
     cursor.execute("""
         SELECT id, start_time, end_time, duration_minutes, is_active
         FROM WorkSessions
@@ -136,24 +149,33 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     """, (task_id, user_id))
     all_sessions = cursor.fetchall()
     logger.info(f"🔵 Found {len(all_sessions)} WorkSessions for this task")
-    for session in all_sessions:
-        logger.info(f"   Session {session[0]}: start={session[1]}, end={session[2]}, duration={session[3]}, active={session[4]}")
 
-    cursor.execute("""
-        SELECT COALESCE(SUM(
-            CASE
-                WHEN end_time IS NULL THEN
-                    CAST((JULIANDAY(datetime('now')) - JULIANDAY(start_time)) * 24 * 60 AS INTEGER)
-                ELSE
-                    duration_minutes
-            END
-        ), 0) as total_minutes
-        FROM WorkSessions
-        WHERE session_type = 'task' AND reference_id = ? AND user_id = ?
-    """, (task_id, user_id))
-    result = cursor.fetchone()
-    spent_time = result[0] if result and result[0] is not None and result[0] >= 0 else 0
-    logger.info(f"🔵 Calculated spent_time: {spent_time} minutes")
+    # محاسبه زمان سپری شده به صورت دستی
+    spent_time = 0
+    for session in all_sessions:
+        session_id, start_time, end_time, duration_minutes, is_active = session
+        logger.info(f"   Session {session_id}: start={start_time}, end={end_time}, duration={duration_minutes}, active={is_active}")
+
+        if end_time is None:
+            # Session فعال - محاسبه زمان سپری شده تا الان
+            if start_time:
+                try:
+                    start_dt = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+                    now_dt = datetime.now()
+                    elapsed = int((now_dt - start_dt).total_seconds() / 60)
+                    logger.info(f"      ✅ Active session: {elapsed} minutes elapsed")
+                    spent_time += elapsed
+                except Exception as e:
+                    logger.error(f"      ❌ Error calculating elapsed time: {e}")
+        else:
+            # Session تمام شده - استفاده از duration_minutes
+            if duration_minutes and duration_minutes > 0:
+                logger.info(f"      ✅ Completed session: {duration_minutes} minutes")
+                spent_time += duration_minutes
+            else:
+                logger.warning(f"      ⚠️ Completed session has no duration!")
+
+    logger.info(f"🔵 Total calculated spent_time: {spent_time} minutes")
     conn.close()
 
     # محاسبه زمان تخصیصی (به دقیقه)
