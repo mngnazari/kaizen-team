@@ -32,8 +32,8 @@ def get_active_task_id(user_db_id):
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT task_id FROM TaskActivities 
-            WHERE user_id = ? AND end_time IS NULL 
+            SELECT reference_id FROM WorkSessions
+            WHERE user_id = ? AND session_type = 'task' AND is_active = 1
             LIMIT 1
         """, (user_db_id,))
         result = cursor.fetchone()

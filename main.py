@@ -340,7 +340,7 @@ def main() -> None:
 
     # ✅ هندلرهای کار (جدید)
     application.add_handler(CallbackQueryHandler(show_task_work_panel, pattern='^work_panel_'))
-    application.add_handler(CallbackQueryHandler(start_work_timer, pattern='^start_work_'))
+    application.add_handler(CallbackQueryHandler(start_work_timer, pattern='^start_work_\d+$'))
 
     application.add_handler(CallbackQueryHandler(show_archived_tasks, pattern='^archive_tasks$'))
     application.add_handler(CallbackQueryHandler(view_archived_task_details, pattern='^view_archive_'))

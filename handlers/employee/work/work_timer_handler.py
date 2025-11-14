@@ -1,5 +1,6 @@
 # handlers/employee/work/work_timer_handler.py
 
+import logging
 from telegram import Update
 from telegram.ext import ContextTypes
 from datetime import datetime
@@ -9,31 +10,43 @@ from database.models.work_session import WorkSessionModel
 from services.task_service import TaskService
 from services.time_tracking_service import TimeTrackingService
 
+logger = logging.getLogger(__name__)
+
 
 async def start_work_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """شروع تایمر کار"""
     query = update.callback_query
     await query.answer()
 
+    logger.info(f"🔵 start_work_timer called with callback_data: {query.data}")
+
     task_id = int(query.data.split('_')[2])
     user_telegram_id = query.from_user.id
+
+    logger.info(f"🔵 Parsed task_id: {task_id}, user_telegram_id: {user_telegram_id}")
 
     # دریافت user_id
     user = UserModel.get_by_telegram_id(user_telegram_id)
     if not user:
+        logger.error(f"❌ کاربر با telegram_id={user_telegram_id} یافت نشد!")
         await query.edit_message_text("❌ کاربر یافت نشد!")
         return
 
     user_id = user.get('id')
+    logger.info(f"🔵 User found: user_id={user_id}")
 
     # بررسی اینکه روز کاری شروع شده باشد
     active_session = WorkSessionModel.get_active_session(user_id)
+    logger.info(f"🔵 Active session: {active_session}")
+
     if not active_session:
+        logger.warning(f"⚠️ کاربر {user_id} روز کاری خود را شروع نکرده است!")
         await query.answer("⚠️ ابتدا باید روز کاری خود را شروع کنید!\nاز منوی مدیریت زمان استفاده کنید.", show_alert=True)
         return
 
     # بررسی اینکه این کار قبلاً شروع نشده باشد
     if active_session.get('session_type') == 'task' and active_session.get('reference_id') == task_id:
+        logger.info(f"ℹ️ کار {task_id} در حال حاضر در حال انجام است")
         await query.answer("⚠️ این کار در حال حاضر در حال انجام است!", show_alert=True)
         # بازگشت به پنل کار
         from .work_panel_handler import show_task_work_panel
@@ -42,10 +55,13 @@ async def start_work_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # شروع کار با استفاده از TimeTrackingService
+    logger.info(f"🔵 Starting task {task_id} for user {user_id}...")
     success, message = TimeTrackingService.start_task(user_id, task_id)
+    logger.info(f"🔵 TimeTrackingService.start_task result: success={success}, message={message}")
 
     if success:
         # تغییر وضعیت کار به in_progress
+        logger.info(f"🔵 Updating task {task_id} status to 'in_progress'...")
         conn = create_connection()
         cursor = conn.cursor()
         cursor.execute("""
@@ -53,9 +69,11 @@ async def start_work_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """, (task_id,))
         conn.commit()
         conn.close()
+        logger.info(f"✅ Task {task_id} status updated to 'in_progress'")
 
         await query.answer("✅ تایمر کار شروع شد!", show_alert=True)
     else:
+        logger.error(f"❌ خطا در شروع تایمر: {message}")
         await query.answer(f"❌ {message}", show_alert=True)
 
     # بازگشت به پنل کار
