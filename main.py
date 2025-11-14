@@ -55,6 +55,23 @@ from handlers.admin.menu_handler import show_main_menu
 from handlers.admin.daily_report_handler import (
     show_daily_report_menu, show_employee_daily_report, show_current_tasks
 )
+from handlers.admin.time_settings_handler import (
+    show_time_settings_menu,
+    show_work_hours_menu,
+    show_holidays_menu,
+    show_holidays_list,
+    delete_holiday,
+    schedule_conv_handler,
+    holiday_conv_handler
+)
+from handlers.admin.time_reports_handler import (
+    show_time_reports_menu,
+    show_today_time_report,
+    show_week_time_report,
+    show_employees_time_report,
+    show_employee_detailed_report,
+    show_detailed_break_info
+)
 from handlers.admin.manage import (
     show_manage_tasks_menu,
     manage_by_employee,
@@ -74,6 +91,17 @@ from handlers.admin.manage import (
 from handlers.employee.employee_archive_handler import show_archived_tasks, view_archived_task_details
 from handlers.employee.employee_task_handler import (
     list_employee_tasks, view_task_details, back_to_tasks_list, employee_conv_handler
+)
+from handlers.employee.time_tracking_handler import (
+    show_time_tracking_menu,
+    start_work_day,
+    end_work_day,
+    show_current_status,
+    show_change_activity_menu,
+    select_task_for_timer,
+    start_task_timer,
+    start_daily_activity_timer,
+    show_today_report
 )
 
 # ✅ ایمپورت هندلرهای جدید work
@@ -220,6 +248,10 @@ def main() -> None:
     application.add_handler(confirm_submit_callback)
     application.add_handler(completed_tasks_conv_handler)
 
+    # ConversationHandler های تنظیمات زمان
+    application.add_handler(schedule_conv_handler)
+    application.add_handler(holiday_conv_handler)
+
     # ========== CommandHandler ==========
     # هندلر start برای ادمین و کارمندان موجود
     application.add_handler(CommandHandler("start", handle_start_for_existing_users))
@@ -283,6 +315,21 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(request_approval_confirmation, pattern='^approve_'))
     application.add_handler(CallbackQueryHandler(confirm_approval, pattern='^confirm_approve_'))
 
+    # --- تنظیمات زمان ---
+    application.add_handler(CallbackQueryHandler(show_time_settings_menu, pattern='^time_settings$'))
+    application.add_handler(CallbackQueryHandler(show_work_hours_menu, pattern='^set_work_hours$'))
+    application.add_handler(CallbackQueryHandler(show_holidays_menu, pattern='^manage_holidays$'))
+    application.add_handler(CallbackQueryHandler(show_holidays_list, pattern='^list_holidays$'))
+    application.add_handler(CallbackQueryHandler(delete_holiday, pattern='^delete_holiday_'))
+
+    # --- گزارشات زمان ---
+    application.add_handler(CallbackQueryHandler(show_time_reports_menu, pattern='^time_reports$'))
+    application.add_handler(CallbackQueryHandler(show_today_time_report, pattern='^time_report_today$'))
+    application.add_handler(CallbackQueryHandler(show_week_time_report, pattern='^time_report_week$'))
+    application.add_handler(CallbackQueryHandler(show_employees_time_report, pattern='^time_report_employees$'))
+    application.add_handler(CallbackQueryHandler(show_employee_detailed_report, pattern='^emp_time_report_'))
+    application.add_handler(CallbackQueryHandler(show_detailed_break_info, pattern='^detailed_break_'))
+
     # --- هندلرهای نیروها ---
     application.add_handler(CallbackQueryHandler(list_employee_tasks, pattern='^list_tasks$'))
     application.add_handler(CallbackQueryHandler(view_task_details, pattern='^details_'))
@@ -294,6 +341,17 @@ def main() -> None:
 
     application.add_handler(CallbackQueryHandler(show_archived_tasks, pattern='^archive_tasks$'))
     application.add_handler(CallbackQueryHandler(view_archived_task_details, pattern='^view_archive_'))
+
+    # --- هندلرهای مدیریت زمان کارمند ---
+    application.add_handler(CallbackQueryHandler(show_time_tracking_menu, pattern='^time_tracking_menu$'))
+    application.add_handler(CallbackQueryHandler(start_work_day, pattern='^start_work_day$'))
+    application.add_handler(CallbackQueryHandler(end_work_day, pattern='^end_work_day$'))
+    application.add_handler(CallbackQueryHandler(show_current_status, pattern='^current_status$'))
+    application.add_handler(CallbackQueryHandler(show_change_activity_menu, pattern='^change_activity$'))
+    application.add_handler(CallbackQueryHandler(select_task_for_timer, pattern='^select_task$'))
+    application.add_handler(CallbackQueryHandler(start_task_timer, pattern='^start_timer_'))
+    application.add_handler(CallbackQueryHandler(start_daily_activity_timer, pattern='^activity_'))
+    application.add_handler(CallbackQueryHandler(show_today_report, pattern='^today_report$'))
 
     # اجرای بات
     print("✅ بات با موفقیت راه‌اندازی شد!")

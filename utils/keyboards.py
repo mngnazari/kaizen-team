@@ -41,6 +41,10 @@ def get_main_menu_keyboard():
         [
             InlineKeyboardButton("👥 مدیریت کاربران", callback_data="user_management"),
             InlineKeyboardButton("📊 گزارش روزانه", callback_data="daily_report")
+        ],
+        [
+            InlineKeyboardButton("⚙️ تنظیمات زمان", callback_data="time_settings"),
+            InlineKeyboardButton("📊 گزارشات زمان", callback_data="time_reports")
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -60,6 +64,9 @@ def get_employee_main_keyboard():
         [
             InlineKeyboardButton("📝 کارها", callback_data="list_tasks"),
             InlineKeyboardButton("🗂 آرشیو کارها", callback_data="archive_tasks")
+        ],
+        [
+            InlineKeyboardButton("⏱ مدیریت زمان", callback_data="time_tracking_menu")
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
