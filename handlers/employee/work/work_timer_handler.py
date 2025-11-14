@@ -5,7 +5,9 @@ from telegram.ext import ContextTypes
 from datetime import datetime
 from database.connection import create_connection
 from database.models.user import UserModel
+from database.models.work_session import WorkSessionModel
 from services.task_service import TaskService
+from services.time_tracking_service import TimeTrackingService
 
 
 async def start_work_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -24,37 +26,37 @@ async def start_work_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = user.get('id')
 
-    # بررسی وجود کار فعال
-    conn = create_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT task_id FROM TaskActivities 
-        WHERE user_id = ? AND end_time IS NULL
-    """, (user_id,))
-    active_task = cursor.fetchone()
-
-    if active_task:
-        await query.answer("⚠️ شما در حال حاضر یک کار فعال دارید!", show_alert=True)
-        conn.close()
+    # بررسی اینکه روز کاری شروع شده باشد
+    active_session = WorkSessionModel.get_active_session(user_id)
+    if not active_session:
+        await query.answer("⚠️ ابتدا باید روز کاری خود را شروع کنید!\nاز منوی مدیریت زمان استفاده کنید.", show_alert=True)
         return
 
-    # شروع تایمر جدید
-    start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    cursor.execute("""
-        INSERT INTO TaskActivities (user_id, task_id, start_time)
-        VALUES (?, ?, ?)
-    """, (user_id, task_id, start_time))
+    # بررسی اینکه این کار قبلاً شروع نشده باشد
+    if active_session.get('session_type') == 'task' and active_session.get('reference_id') == task_id:
+        await query.answer("⚠️ این کار در حال حاضر در حال انجام است!", show_alert=True)
+        # بازگشت به پنل کار
+        from .work_panel_handler import show_task_work_panel
+        context.user_data['callback_query_data'] = f"work_panel_{task_id}"
+        await show_task_work_panel(update, context)
+        return
 
-    # تغییر وضعیت کار به in_progress
-    cursor.execute("""
-        UPDATE Tasks SET status = 'in_progress' WHERE id = ?
-    """, (task_id,))
+    # شروع کار با استفاده از TimeTrackingService
+    success, message = TimeTrackingService.start_task(user_id, task_id)
 
-    conn.commit()
-    conn.close()
+    if success:
+        # تغییر وضعیت کار به in_progress
+        conn = create_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE Tasks SET status = 'in_progress' WHERE id = ?
+        """, (task_id,))
+        conn.commit()
+        conn.close()
 
-    await query.answer("✅ تایمر کار شروع شد!", show_alert=True)
+        await query.answer("✅ تایمر کار شروع شد!", show_alert=True)
+    else:
+        await query.answer(f"❌ {message}", show_alert=True)
 
     # بازگشت به پنل کار
     from .work_panel_handler import show_task_work_panel

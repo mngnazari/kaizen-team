@@ -19,12 +19,16 @@ async def show_time_tracking_menu(update: Update, context: ContextTypes.DEFAULT_
 
     keyboard = []
 
+    # شروع و پایان روز کاری کنار هم
     if not status['is_working']:
-        # هنوز روز کاری شروع نشده
-        keyboard.append([InlineKeyboardButton("▶️ شروع روز کاری", callback_data="start_work_day")])
+        keyboard.append([
+            InlineKeyboardButton("▶️ شروع روز کاری", callback_data="start_work_day")
+        ])
     else:
-        # روز کاری شروع شده
-        keyboard.append([InlineKeyboardButton("⏹ پایان روز کاری", callback_data="end_work_day")])
+        keyboard.append([
+            InlineKeyboardButton("▶️ شروع روز کاری", callback_data="start_work_day"),
+            InlineKeyboardButton("⏹ پایان روز کاری", callback_data="confirm_end_work_day")
+        ])
         keyboard.append([InlineKeyboardButton("⏱ وضعیت فعلی", callback_data="current_status")])
         keyboard.append([InlineKeyboardButton("🔄 تغییر فعالیت", callback_data="change_activity")])
 
@@ -69,6 +73,27 @@ async def start_work_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]]),
             parse_mode='Markdown'
         )
+
+
+async def confirm_end_work_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """تأیید پایان روز کاری"""
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ بله، مطمئنم", callback_data="end_work_day"),
+            InlineKeyboardButton("❌ خیر", callback_data="time_tracking_menu")
+        ]
+    ]
+
+    await query.edit_message_text(
+        "⚠️ **تأیید پایان روز کاری**\n\n"
+        "آیا مطمئن هستید که می‌خواهید روز کاری را پایان دهید؟\n\n"
+        "⚠️ توجه: پس از پایان روز کاری، دیگر نمی‌توانید فعالیتی را ثبت کنید.",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode='Markdown'
+    )
 
 
 async def end_work_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -122,8 +147,8 @@ async def show_change_activity_menu(update: Update, context: ContextTypes.DEFAUL
 
     keyboard = [
         [InlineKeyboardButton("📋 انتخاب کار", callback_data="select_task")],
-        [InlineKeyboardButton("🍽 نهار و نماز", callback_data="activity_lunch_prayer")],
-        [InlineKeyboardButton("☕ استراحت", callback_data="activity_break")],
+        [InlineKeyboardButton("🍽 نهار و نماز", callback_data="confirm_activity_lunch_prayer")],
+        [InlineKeyboardButton("☕ استراحت", callback_data="confirm_activity_break")],
         [InlineKeyboardButton("⏸ بیکاری", callback_data="activity_idle")],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="time_tracking_menu")]
     ]
@@ -204,6 +229,48 @@ async def start_task_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ]]),
             parse_mode='Markdown'
         )
+
+
+async def confirm_activity_lunch_prayer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """تأیید شروع نهار و نماز"""
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ بله", callback_data="activity_lunch_prayer"),
+            InlineKeyboardButton("❌ خیر", callback_data="change_activity")
+        ]
+    ]
+
+    await query.edit_message_text(
+        "🍽 **نهار و نماز**\n\n"
+        "آیا می‌خواهید زمان نهار و نماز را شروع کنید؟\n\n"
+        "⏱ مدت زمان: 60 دقیقه (ثابت)",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode='Markdown'
+    )
+
+
+async def confirm_activity_break(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """تأیید شروع استراحت"""
+    query = update.callback_query
+    await query.answer()
+
+    keyboard = [
+        [
+            InlineKeyboardButton("✅ بله", callback_data="activity_break"),
+            InlineKeyboardButton("❌ خیر", callback_data="change_activity")
+        ]
+    ]
+
+    await query.edit_message_text(
+        "☕ **استراحت**\n\n"
+        "آیا می‌خواهید زمان استراحت را شروع کنید?\n\n"
+        "⚠️ توجه: زمان استراحت روی حقوق و امتیاز شما تأثیر می‌گذارد.",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode='Markdown'
+    )
 
 
 async def start_daily_activity_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):

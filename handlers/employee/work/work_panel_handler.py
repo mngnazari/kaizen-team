@@ -32,15 +32,20 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
         await query.edit_message_text("❌ کار یافت نشد!")
         return
 
-    # دریافت زمان سپری شده
+    # دریافت زمان سپری شده از WorkSessions
     conn = create_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT COALESCE(SUM(
-            CAST((JULIANDAY(COALESCE(end_time, datetime('now'))) - JULIANDAY(start_time)) * 24 * 60 AS INTEGER)
+            CASE
+                WHEN end_time IS NULL THEN
+                    CAST((JULIANDAY(datetime('now')) - JULIANDAY(start_time)) * 24 * 60 AS INTEGER)
+                ELSE
+                    duration_minutes
+            END
         ), 0) as total_minutes
-        FROM TaskActivities
-        WHERE task_id = ? AND user_id = ?
+        FROM WorkSessions
+        WHERE session_type = 'task' AND reference_id = ? AND user_id = ?
     """, (task_id, user_id))
     result = cursor.fetchone()
     spent_time = result[0] if result and result[0] is not None and result[0] >= 0 else 0
@@ -55,9 +60,13 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     results_count = len(WorkService.get_task_results(task_id, user_id))
     self_score = WorkService.get_self_score(task_id, user_id)
 
+    # بررسی آیا این کار در حال انجام است
+    active_task_id = get_active_task_id(user_id)
+    is_active = (active_task_id == task_id)
+
     # ساخت متن پنل
     spent_formatted = f"{spent_time}د"  # زمان سپری شده به دقیقه
-    allocated_formatted = format_time_as_hours(allocated_time) if allocated_time > 0 else "تعیین نشده"
+    allocated_formatted = format_time(allocated_time) if allocated_time > 0 else "تعیین نشده"
 
     message_text = (
         f"📋 **{task.get('title')}**\n\n"
@@ -71,7 +80,7 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
     # دریافت کیبورد
-    keyboard = get_task_work_keyboard(task_id, allocated_time, spent_time)
+    keyboard = get_task_work_keyboard(task_id, allocated_time, spent_time, is_active)
 
     await query.edit_message_text(
         message_text,
@@ -89,8 +98,8 @@ def get_active_task_id(user_id: int) -> int:
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT task_id FROM TaskActivities 
-            WHERE user_id = ? AND end_time IS NULL 
+            SELECT reference_id FROM WorkSessions
+            WHERE user_id = ? AND session_type = 'task' AND is_active = 1
             LIMIT 1
         """, (user_id,))
         result = cursor.fetchone()

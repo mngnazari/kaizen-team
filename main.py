@@ -95,11 +95,14 @@ from handlers.employee.employee_task_handler import (
 from handlers.employee.time_tracking_handler import (
     show_time_tracking_menu,
     start_work_day,
+    confirm_end_work_day,
     end_work_day,
     show_current_status,
     show_change_activity_menu,
     select_task_for_timer,
     start_task_timer,
+    confirm_activity_lunch_prayer,
+    confirm_activity_break,
     start_daily_activity_timer,
     show_today_report
 )
@@ -345,11 +348,14 @@ def main() -> None:
     # --- هندلرهای مدیریت زمان کارمند ---
     application.add_handler(CallbackQueryHandler(show_time_tracking_menu, pattern='^time_tracking_menu$'))
     application.add_handler(CallbackQueryHandler(start_work_day, pattern='^start_work_day$'))
+    application.add_handler(CallbackQueryHandler(confirm_end_work_day, pattern='^confirm_end_work_day$'))
     application.add_handler(CallbackQueryHandler(end_work_day, pattern='^end_work_day$'))
     application.add_handler(CallbackQueryHandler(show_current_status, pattern='^current_status$'))
     application.add_handler(CallbackQueryHandler(show_change_activity_menu, pattern='^change_activity$'))
     application.add_handler(CallbackQueryHandler(select_task_for_timer, pattern='^select_task$'))
     application.add_handler(CallbackQueryHandler(start_task_timer, pattern='^start_timer_'))
+    application.add_handler(CallbackQueryHandler(confirm_activity_lunch_prayer, pattern='^confirm_activity_lunch_prayer$'))
+    application.add_handler(CallbackQueryHandler(confirm_activity_break, pattern='^confirm_activity_break$'))
     application.add_handler(CallbackQueryHandler(start_daily_activity_timer, pattern='^activity_'))
     application.add_handler(CallbackQueryHandler(show_today_report, pattern='^today_report$'))
 

@@ -86,7 +86,7 @@ def get_back_to_employee_menu_keyboard():
 
 # ==================== Task Work Keyboards ====================
 
-def get_task_work_keyboard(task_id, allocated_time, spent_time):
+def get_task_work_keyboard(task_id, allocated_time, spent_time, is_active=False):
     """
     کیبورد پنل کار
 
@@ -94,14 +94,18 @@ def get_task_work_keyboard(task_id, allocated_time, spent_time):
         task_id: آیدی کار
         allocated_time: زمان تخصیصی (دقیقه)
         spent_time: زمان سپری شده (دقیقه)
+        is_active: آیا این کار در حال انجام است
     """
-    from utils.formatters import format_time_as_hours
+    from utils.formatters import format_time
 
     spent_formatted = f"{spent_time}د"
-    allocated_formatted = format_time_as_hours(allocated_time) if allocated_time > 0 else "تعیین نشده"
+    allocated_formatted = format_time(allocated_time) if allocated_time > 0 else "تعیین نشده"
+
+    # تغییر متن دکمه شروع کار بر اساس وضعیت
+    start_button_text = "🚀 شروع کار (درحال انجام)" if is_active else "🚀 شروع کار"
 
     keyboard = [
-        [InlineKeyboardButton("🚀 شروع کار", callback_data=f"start_work_{task_id}")],
+        [InlineKeyboardButton(start_button_text, callback_data=f"start_work_{task_id}")],
         [
             InlineKeyboardButton(f"⏱️ زمان کل: {allocated_formatted}", callback_data=f"work_panel_{task_id}"),
             InlineKeyboardButton(f"⌚ زمان سپری شده: {spent_formatted}", callback_data=f"work_panel_{task_id}")
@@ -115,12 +119,11 @@ def get_task_work_keyboard(task_id, allocated_time, spent_time):
             InlineKeyboardButton("⭐ امتیاز به خود", callback_data=f"self_score_{task_id}")
         ],
         [
-            InlineKeyboardButton("🍽 نهار و نماز", callback_data=f"activity_lunch_prayer"),
-            InlineKeyboardButton("☕ استراحت", callback_data=f"activity_break")
+            InlineKeyboardButton("🍽 نهار و نماز", callback_data=f"confirm_activity_lunch_prayer"),
+            InlineKeyboardButton("☕ استراحت", callback_data=f"confirm_activity_break")
         ],
         [
-            InlineKeyboardButton("✅ تحویل کار", callback_data=f"submit_{task_id}"),
-            InlineKeyboardButton("⏹ پایان روز کاری", callback_data=f"end_work_day")
+            InlineKeyboardButton("✅ تحویل کار", callback_data=f"submit_{task_id}")
         ],
         [InlineKeyboardButton("🔙 بازگشت", callback_data="back_to_tasks_list")]
     ]
