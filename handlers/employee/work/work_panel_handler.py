@@ -1,5 +1,6 @@
 # handlers/employee/work/work_panel_handler.py
 
+import logging
 from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from database.connection import create_connection
@@ -8,6 +9,8 @@ from services.task_service import TaskService
 from services.work_service import WorkService
 from utils.keyboards import get_task_work_keyboard
 from utils.formatters import format_time, format_time_as_hours
+
+logger = logging.getLogger(__name__)
 
 
 async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -18,13 +21,17 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     task_id = int(query.data.split('_')[2])
     user_telegram_id = query.from_user.id
 
+    logger.info(f"🔵 show_task_work_panel: task_id={task_id}, telegram_id={user_telegram_id}")
+
     # دریافت اطلاعات کاربر
     user = UserModel.get_by_telegram_id(user_telegram_id)
     if not user:
+        logger.error(f"❌ کاربر با telegram_id={user_telegram_id} یافت نشد!")
         await query.edit_message_text("❌ کاربر یافت نشد!")
         return
 
     user_id = user.get('id')
+    logger.info(f"🔵 User found: user_id={user_id}")
 
     # دریافت اطلاعات کار
     task = TaskService.get_task(task_id, with_details=True)
@@ -33,8 +40,21 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
         return
 
     # دریافت زمان سپری شده از WorkSessions
+    logger.info(f"🔵 Calculating spent time for task_id={task_id}, user_id={user_id}")
     conn = create_connection()
     cursor = conn.cursor()
+
+    # ابتدا ببینیم چند WorkSession برای این کار وجود دارد
+    cursor.execute("""
+        SELECT id, start_time, end_time, duration_minutes, is_active
+        FROM WorkSessions
+        WHERE session_type = 'task' AND reference_id = ? AND user_id = ?
+    """, (task_id, user_id))
+    all_sessions = cursor.fetchall()
+    logger.info(f"🔵 Found {len(all_sessions)} WorkSessions for this task")
+    for session in all_sessions:
+        logger.info(f"   Session {session[0]}: start={session[1]}, end={session[2]}, duration={session[3]}, active={session[4]}")
+
     cursor.execute("""
         SELECT COALESCE(SUM(
             CASE
@@ -49,6 +69,7 @@ async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYP
     """, (task_id, user_id))
     result = cursor.fetchone()
     spent_time = result[0] if result and result[0] is not None and result[0] >= 0 else 0
+    logger.info(f"🔵 Calculated spent_time: {spent_time} minutes")
     conn.close()
 
     # محاسبه زمان تخصیصی (به دقیقه)

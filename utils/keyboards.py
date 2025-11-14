@@ -107,8 +107,9 @@ def get_task_work_keyboard(task_id, allocated_time, spent_time, is_active=False)
     keyboard = [
         [InlineKeyboardButton(start_button_text, callback_data=f"start_work_{task_id}")],
         [
-            InlineKeyboardButton(f"⏱️ زمان کل: {allocated_formatted}", callback_data=f"work_panel_{task_id}"),
-            InlineKeyboardButton(f"⌚ زمان سپری شده: {spent_formatted}", callback_data=f"work_panel_{task_id}")
+            InlineKeyboardButton(f"⏱️ کل: {allocated_formatted}", callback_data=f"work_panel_{task_id}"),
+            InlineKeyboardButton(f"⌚ سپری شده: {spent_formatted}", callback_data=f"work_panel_{task_id}"),
+            InlineKeyboardButton("🔄", callback_data=f"work_panel_{task_id}")
         ],
         [
             InlineKeyboardButton("📚 ثبت دانش", callback_data=f"knowledge_{task_id}"),
