@@ -1,0 +1,98 @@
+# handlers/employee/work/work_panel_handler.py
+
+from telegram import Update, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
+from database.connection import create_connection
+from database.models.user import UserModel
+from services.task_service import TaskService
+from services.work_service import WorkService
+from utils.keyboards import get_task_work_keyboard
+from utils.formatters import format_time
+
+
+async def show_task_work_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """نمایش پنل کار با اطلاعات کامل"""
+    query = update.callback_query
+    await query.answer()
+
+    task_id = int(query.data.split('_')[2])
+    user_telegram_id = query.from_user.id
+
+    # دریافت اطلاعات کاربر
+    user = UserModel.get_by_telegram_id(user_telegram_id)
+    if not user:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    user_id = user.get('id')
+
+    # دریافت اطلاعات کار
+    task = TaskService.get_task(task_id, with_details=True)
+    if not task:
+        await query.edit_message_text("❌ کار یافت نشد!")
+        return
+
+    # دریافت زمان سپری شده
+    conn = create_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT COALESCE(SUM(
+            CAST((JULIANDAY(COALESCE(end_time, datetime('now'))) - JULIANDAY(start_time)) * 24 * 60 AS INTEGER)
+        ), 0) as total_minutes
+        FROM TaskActivities
+        WHERE task_id = ? AND user_id = ?
+    """, (task_id, user_id))
+    spent_time = cursor.fetchone()[0]
+    conn.close()
+
+    # محاسبه زمان تخصیصی
+    allocated_time = int(task.get('duration', 0)) if task.get('duration') else 0
+
+    # دریافت تعداد داده‌های ثبت شده
+    knowledge_count = len(WorkService.get_task_knowledge(task_id, user_id))
+    suggestion_count = len(WorkService.get_task_suggestions(task_id, user_id))
+    results_count = len(WorkService.get_task_results(task_id, user_id))
+    self_score = WorkService.get_self_score(task_id, user_id)
+
+    # ساخت متن پنل
+    spent_formatted = format_time(spent_time)
+    allocated_formatted = format_time(allocated_time) if allocated_time > 0 else "تعیین نشده"
+
+    message_text = (
+        f"📋 **{task.get('title')}**\n\n"
+        f"⏱️ زمان کل: {allocated_formatted}\n"
+        f"⌚ زمان سپری شده: {spent_formatted}\n\n"
+        f"📊 **وضعیت ثبت داده‌ها:**\n"
+        f"📚 دانش: {knowledge_count}\n"
+        f"💡 پیشنهاد: {suggestion_count}\n"
+        f"📋 نتایج: {results_count}\n"
+        f"⭐ امتیاز خود: {'✅ ثبت شده' if self_score else '❌ ثبت نشده'}\n"
+    )
+
+    # دریافت کیبورد
+    keyboard = get_task_work_keyboard(task_id, allocated_time, spent_time)
+
+    await query.edit_message_text(
+        message_text,
+        reply_markup=keyboard,
+        parse_mode='Markdown'
+    )
+
+
+def get_active_task_id(user_id: int) -> int:
+    """دریافت task_id کار فعال کاربر"""
+    conn = create_connection()
+    if not conn:
+        return None
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT task_id FROM TaskActivities 
+            WHERE user_id = ? AND end_time IS NULL 
+            LIMIT 1
+        """, (user_id,))
+        result = cursor.fetchone()
+        return result[0] if result else None
+    finally:
+        conn.close()
