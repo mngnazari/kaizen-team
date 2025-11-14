@@ -1,10 +1,22 @@
 # handlers/employee/time_tracking_handler.py
 
+import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 from services.time_tracking_service import TimeTrackingService
 from services.task_service import TaskService
 from database.models.daily_activity import DailyActivityModel
+from database.models.user import UserModel
+
+logger = logging.getLogger(__name__)
+
+
+def get_user_db_id(telegram_id: int) -> int:
+    """تبدیل telegram_id به user_id (database id)"""
+    user = UserModel.get_by_telegram_id(telegram_id)
+    if user:
+        return user.get('id')
+    return None
 
 
 async def show_time_tracking_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -12,10 +24,18 @@ async def show_time_tracking_menu(update: Update, context: ContextTypes.DEFAULT_
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    logger.info(f"🔵 show_time_tracking_menu: telegram_id={telegram_id}, user_id={user_id}")
 
     # دریافت وضعیت فعلی
     status = TimeTrackingService.get_current_status(user_id)
+    logger.info(f"🔵 Current status: {status}")
 
     keyboard = []
 
@@ -53,8 +73,16 @@ async def start_work_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    logger.info(f"🔵 start_work_day: telegram_id={telegram_id}, user_id={user_id}")
     success, message = TimeTrackingService.start_work_day(user_id)
+    logger.info(f"🔵 start_work_day result: success={success}, message={message}")
 
     if success:
         await query.edit_message_text(
@@ -101,8 +129,16 @@ async def end_work_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    logger.info(f"🔵 end_work_day: telegram_id={telegram_id}, user_id={user_id}")
     success, message = TimeTrackingService.end_work_day(user_id)
+    logger.info(f"🔵 end_work_day result: success={success}")
 
     await query.edit_message_text(
         message,
@@ -118,8 +154,16 @@ async def show_current_status(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    logger.info(f"🔵 show_current_status: telegram_id={telegram_id}, user_id={user_id}")
     status = TimeTrackingService.get_current_status(user_id)
+    logger.info(f"🔵 Current status: {status}")
 
     if not status['is_working']:
         await query.edit_message_text(
@@ -166,7 +210,14 @@ async def select_task_for_timer(update: Update, context: ContextTypes.DEFAULT_TY
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    logger.info(f"🔵 select_task_for_timer: telegram_id={telegram_id}, user_id={user_id}")
 
     # دریافت کارهای کارمند
     tasks = TaskService.get_employee_tasks(user_id, status='in_progress')
@@ -207,10 +258,18 @@ async def start_task_timer(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
     task_id = int(query.data.split('_')[2])
+    logger.info(f"🔵 start_task_timer: telegram_id={telegram_id}, user_id={user_id}, task_id={task_id}")
 
     success, message = TimeTrackingService.start_task(user_id, task_id)
+    logger.info(f"🔵 start_task_timer result: success={success}, message={message}")
 
     if success:
         await query.edit_message_text(
@@ -278,8 +337,15 @@ async def start_daily_activity_timer(update: Update, context: ContextTypes.DEFAU
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
     activity_key = query.data.split('_')[1]  # lunch_prayer, break, idle
+    logger.info(f"🔵 start_daily_activity_timer: telegram_id={telegram_id}, user_id={user_id}, activity={activity_key}")
 
     # برای استراحت، نمایش کارهای تمام نشده
     if activity_key == 'break':
@@ -287,6 +353,7 @@ async def start_daily_activity_timer(update: Update, context: ContextTypes.DEFAU
         context.user_data['break_unfinished_tasks'] = unfinished_tasks
 
     success, message = TimeTrackingService.start_daily_activity(user_id, activity_key)
+    logger.info(f"🔵 start_daily_activity_timer result: success={success}")
 
     keyboard = [[
         InlineKeyboardButton("⏱ وضعیت فعلی", callback_data="current_status"),
@@ -320,8 +387,16 @@ async def show_today_report(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
-    user_id = update.effective_user.id
+    telegram_id = update.effective_user.id
+    user_id = get_user_db_id(telegram_id)
+
+    if not user_id:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return
+
+    logger.info(f"🔵 show_today_report: telegram_id={telegram_id}, user_id={user_id}")
     summary = TimeTrackingService.get_today_summary(user_id)
+    logger.info(f"🔵 Today summary: {summary}")
 
     if summary.get('total_time', 0) == 0:
         await query.edit_message_text(
