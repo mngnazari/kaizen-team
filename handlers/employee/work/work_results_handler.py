@@ -17,14 +17,75 @@ async def start_results_entry(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
 
     task_id = int(query.data.split('_')[1])
+    user_telegram_id = query.from_user.id
+
+    # دریافت user_id
+    user = UserModel.get_by_telegram_id(user_telegram_id)
+    if not user:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return ConversationHandler.END
+
+    user_id = user.get('id')
     context.user_data['current_task_id'] = task_id
 
-    await query.edit_message_text(
-        "📋 **ثبت نتایج کار**\n\n"
-        "لطفاً نتایج کار انجام شده را به صورت متن، عکس، ویدیو، فایل یا صدا ارسال کنید.\n\n"
-        "برای اتمام، /done را ارسال کنید.",
-        parse_mode='Markdown'
-    )
+    # نمایش نتایج قبلی
+    previous_results = WorkService.get_task_results(task_id, user_id)
+
+    if previous_results:
+        await query.edit_message_text(
+            "📋 **نتایج ثبت شده قبلی:**\n\n"
+            "در حال ارسال نتایج قبلی...",
+            parse_mode='Markdown'
+        )
+
+        # ارسال تمام نتایج قبلی
+        for idx, result in enumerate(previous_results, 1):
+            # ارسال متن
+            if result.get('text_content'):
+                await context.bot.send_message(
+                    chat_id=user_telegram_id,
+                    text=f"📋 نتیجه #{idx}:\n{result.get('text_content')}"
+                )
+
+            # ارسال فایل
+            if result.get('file_id') and result.get('file_type'):
+                file_id = result.get('file_id')
+                file_type = result.get('file_type')
+
+                try:
+                    if file_type == 'photo':
+                        await context.bot.send_photo(chat_id=user_telegram_id, photo=file_id)
+                    elif file_type == 'video':
+                        await context.bot.send_video(chat_id=user_telegram_id, video=file_id)
+                    elif file_type == 'voice':
+                        await context.bot.send_voice(chat_id=user_telegram_id, voice=file_id)
+                    elif file_type == 'document':
+                        await context.bot.send_document(chat_id=user_telegram_id, document=file_id)
+                except Exception as e:
+                    await context.bot.send_message(
+                        chat_id=user_telegram_id,
+                        text=f"⚠️ خطا در ارسال فایل: {str(e)}"
+                    )
+
+        # پیام ثبت نتیجه جدید
+        await context.bot.send_message(
+            chat_id=user_telegram_id,
+            text=(
+                "━━━━━━━━━━━━━━━━━\n\n"
+                "📋 **ثبت نتیجه جدید**\n\n"
+                "لطفاً نتیجه جدید را به صورت متن، عکس، ویدیو، فایل یا صدا ارسال کنید.\n\n"
+                "برای اتمام، /done را ارسال کنید."
+            ),
+            parse_mode='Markdown'
+        )
+    else:
+        await query.edit_message_text(
+            "📋 **ثبت نتایج کار**\n\n"
+            "لطفاً نتایج کار انجام شده را به صورت متن، عکس، ویدیو، فایل یا صدا ارسال کنید.\n\n"
+            "برای اتمام، /done را ارسال کنید.",
+            parse_mode='Markdown'
+        )
+
     return WORK_RESULTS_ENTRY
 
 

@@ -17,15 +17,76 @@ async def start_knowledge_entry(update: Update, context: ContextTypes.DEFAULT_TY
     await query.answer()
 
     task_id = int(query.data.split('_')[1])
+    user_telegram_id = query.from_user.id
+
+    # دریافت user_id
+    user = UserModel.get_by_telegram_id(user_telegram_id)
+    if not user:
+        await query.edit_message_text("❌ کاربر یافت نشد!")
+        return ConversationHandler.END
+
+    user_id = user.get('id')
     context.user_data['current_task_id'] = task_id
     context.user_data['knowledge_entries'] = []
 
-    await query.edit_message_text(
-        "📚 **ثبت دانش**\n\n"
-        "لطفاً دانش کسب شده از این کار را به صورت متن، عکس، ویدیو، فایل یا صدا ارسال کنید.\n\n"
-        "برای اتمام، /done را ارسال کنید.",
-        parse_mode='Markdown'
-    )
+    # نمایش دانش‌های قبلی
+    previous_knowledge = WorkService.get_task_knowledge(task_id, user_id)
+
+    if previous_knowledge:
+        await query.edit_message_text(
+            "📚 **دانش‌های ثبت شده قبلی:**\n\n"
+            "در حال ارسال دانش‌های قبلی...",
+            parse_mode='Markdown'
+        )
+
+        # ارسال تمام دانش‌های قبلی
+        for idx, knowledge in enumerate(previous_knowledge, 1):
+            # ارسال متن
+            if knowledge.get('text_content'):
+                await context.bot.send_message(
+                    chat_id=user_telegram_id,
+                    text=f"📚 دانش #{idx}:\n{knowledge.get('text_content')}"
+                )
+
+            # ارسال فایل
+            if knowledge.get('file_id') and knowledge.get('file_type'):
+                file_id = knowledge.get('file_id')
+                file_type = knowledge.get('file_type')
+
+                try:
+                    if file_type == 'photo':
+                        await context.bot.send_photo(chat_id=user_telegram_id, photo=file_id)
+                    elif file_type == 'video':
+                        await context.bot.send_video(chat_id=user_telegram_id, video=file_id)
+                    elif file_type == 'voice':
+                        await context.bot.send_voice(chat_id=user_telegram_id, voice=file_id)
+                    elif file_type == 'document':
+                        await context.bot.send_document(chat_id=user_telegram_id, document=file_id)
+                except Exception as e:
+                    await context.bot.send_message(
+                        chat_id=user_telegram_id,
+                        text=f"⚠️ خطا در ارسال فایل: {str(e)}"
+                    )
+
+        # پیام ثبت دانش جدید
+        await context.bot.send_message(
+            chat_id=user_telegram_id,
+            text=(
+                "━━━━━━━━━━━━━━━━━\n\n"
+                "📚 **ثبت دانش جدید**\n\n"
+                "لطفاً دانش جدید را به صورت متن، عکس، ویدیو، فایل یا صدا ارسال کنید.\n\n"
+                "برای اتمام، /done را ارسال کنید."
+            ),
+            parse_mode='Markdown'
+        )
+    else:
+        await query.edit_message_text(
+            "📚 **ثبت دانش**\n\n"
+            "لطفاً دانش کسب شده از این کار را به صورت متن، عکس، ویدیو، فایل یا صدا ارسال کنید.\n\n"
+            "برای اتمام، /done را ارسال کنید.",
+            parse_mode='Markdown'
+        )
+
     return WORK_KNOWLEDGE_ENTRY
 
 
