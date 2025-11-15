@@ -3,7 +3,10 @@ name: Deploy to Host via FTP
 on:
   push:
     branches:
-      - main  # اگه برنچت master هست، بنویس master
+      - '**'  # همه برنچ‌ها
+  pull_request:
+    branches:
+      - main
 
 jobs:
   deploy:
