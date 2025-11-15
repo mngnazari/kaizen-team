@@ -51,7 +51,9 @@ async def show_tasks_by_status(update: Update, context: ContextTypes.DEFAULT_TYP
     await query.answer()
 
     # استخراج وضعیت از callback_data
-    status = query.data.split('_')[2]
+    # callback_data format: "status_list_pending" or "status_list_in_progress"
+    parts = query.data.split('_')
+    status = '_'.join(parts[2:])  # Join all parts after "status_list_"
 
     # نقشه برای نمایش فارسی
     status_names = {
