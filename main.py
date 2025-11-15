@@ -1,6 +1,7 @@
 # main.py
 # تست اتوماتیک دیپلوی - این کامنت برای تست پوش به ریپازیتوری اضافه شده
 # آپدیت جدید برای تست سیستم دیپلوی
+# بررسی نهایی عملکرد auto-deploy
 import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
