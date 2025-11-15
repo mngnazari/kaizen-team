@@ -184,6 +184,11 @@ async def back_to_main_menu_from_admin(update: Update, context: ContextTypes.DEF
 
 def main() -> None:
     """تابع اصلی برای اجرای بات"""
+    # 🧪 تست اتوماتیک دیپلوی گیت
+    print("=" * 50)
+    print("🚀 تست اتوماتیک دیپلوی - بات در حال راه‌اندازی...")
+    print("=" * 50)
+
     # حذف دیتابیس قدیمی (اختیاری)
     db_path = "task_bot.db"
     if os.path.exists(db_path):
