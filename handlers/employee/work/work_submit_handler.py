@@ -19,7 +19,20 @@ async def submit_task(update: Update, context: ContextTypes.DEFAULT_TYPE):
     can_submit, message = TaskService.can_employee_submit(task_id, user_telegram_id)
 
     if not can_submit:
-        await query.answer(message, show_alert=True)
+        # نمایش پیام خطا با راهنمایی کاربر
+        keyboard = [
+            [InlineKeyboardButton("🔙 بازگشت به پنل کار", callback_data=f"work_panel_{task_id}")]
+        ]
+
+        await query.edit_message_text(
+            f"❌ **امکان تحویل کار وجود ندارد!**\n\n"
+            f"⚠️ {message}\n\n"
+            f"💡 لطفاً ابتدا موارد ذیل را تکمیل کنید:\n"
+            f"• حداقل یک نتیجه برای کار ثبت کنید\n"
+            f"• امتیاز خود را ثبت کنید",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode='Markdown'
+        )
         return
 
     # درخواست تأیید
@@ -51,7 +64,19 @@ async def confirm_submit_task(update: Update, context: ContextTypes.DEFAULT_TYPE
     can_submit, message = TaskService.can_employee_submit(task_id, user_telegram_id)
 
     if not can_submit:
-        await query.edit_message_text(f"❌ {message}")
+        keyboard = [
+            [InlineKeyboardButton("🔙 بازگشت به پنل کار", callback_data=f"work_panel_{task_id}")]
+        ]
+
+        await query.edit_message_text(
+            f"❌ **امکان تحویل کار وجود ندارد!**\n\n"
+            f"⚠️ {message}\n\n"
+            f"💡 لطفاً ابتدا موارد ذیل را تکمیل کنید:\n"
+            f"• حداقل یک نتیجه برای کار ثبت کنید\n"
+            f"• امتیاز خود را ثبت کنید",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode='Markdown'
+        )
         return
 
     # تحویل کار
