@@ -254,12 +254,6 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(show_employee_tasks_by_category, pattern='^emp_tasks_'))
     application.add_handler(CallbackQueryHandler(show_tasks_by_employee_category, pattern='^emp_cat_'))
 
-    # --- مدیریت کارها (سیستم قدیم - برای سازگاری) ---
-    application.add_handler(CallbackQueryHandler(list_all_tasks, pattern='^list_all_tasks$'))
-    application.add_handler(CallbackQueryHandler(list_pending_tasks, pattern='^list_pending_tasks$'))
-    application.add_handler(CallbackQueryHandler(list_in_progress_tasks, pattern='^list_in_progress_tasks$'))
-    application.add_handler(CallbackQueryHandler(list_completed_tasks_manage, pattern='^list_completed_tasks_manage$'))
-
     # --- جزئیات و تخصیص کار ---
     application.add_handler(CallbackQueryHandler(view_task_details_admin, pattern='^view_task_'))
     application.add_handler(CallbackQueryHandler(assign_task_to_employee, pattern='^assign_task_'))
