@@ -132,6 +132,9 @@ async def handle_start_for_existing_users(update: Update, context: ContextTypes.
         name = user.get('name')
 
         if is_employee == 1 and role == 'employee':
+            # پیام تست deploy
+            await update.message.reply_text("سلام کارمند")
+
             await update.message.reply_text(
                 f"👋 سلام {name} عزیز!\n\nخوش آمدید.",
                 reply_markup=get_employee_reply_keyboard()
