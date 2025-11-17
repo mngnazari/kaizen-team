@@ -132,8 +132,13 @@ async def handle_start_for_existing_users(update: Update, context: ContextTypes.
         name = user.get('name')
 
         if is_employee == 1 and role == 'employee':
-            # پیام تست deploy
-            await update.message.reply_text("سلام کارمند")
+            # پیام تست deploy و auto-restart
+            await update.message.reply_text(
+                "🟢 تست موفق! 🟢\n\n"
+                "✅ Deploy کار می‌کند\n"
+                "✅ Auto-Restart فعال است\n\n"
+                "این پیام نشان می‌دهد که تغییرات به‌طور خودکار روی هاست اعمال شده‌اند."
+            )
 
             await update.message.reply_text(
                 f"👋 سلام {name} عزیز!\n\nخوش آمدید.",
