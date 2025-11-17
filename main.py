@@ -1,4 +1,5 @@
 # main.py
+# Deploy Test: 2025-01-17 - بهبود واکنش بات برای تحویل کار
 import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
