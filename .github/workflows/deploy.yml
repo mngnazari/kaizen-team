@@ -31,3 +31,13 @@ jobs:
           .github/
           .gitignore
           README.md
+
+    - name: Restart Bot via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        script: |
+          cd ~
+          bash bot_manager.sh restart_${{ secrets.BOT_NAME }}
