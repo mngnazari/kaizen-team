@@ -1,2 +1,7 @@
+# Telegram Bot Framework
 python-telegram-bot==21.0.1
+
+# Environment Variables Management
 python-dotenv==1.0.0
+
+# Note: SQLite3 is included in Python standard library (no need to install)
