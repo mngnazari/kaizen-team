@@ -32,12 +32,15 @@ jobs:
           .gitignore
           README.md
 
-    - name: Restart Bot via SSH
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        script: |
-          cd ~
-          bash bot_manager.sh restart_${{ secrets.BOT_NAME }}
+    # SSH Restart موقتاً غیرفعال - باید manual restart انجام شود
+    # - name: Restart Bot via SSH
+    #   continue-on-error: true
+    #   uses: appleboy/ssh-action@v1.0.0
+    #   with:
+    #     host: ${{ secrets.FTP_SERVER }}
+    #     username: ${{ secrets.FTP_USERNAME }}
+    #     password: ${{ secrets.FTP_PASSWORD }}
+    #     port: 22
+    #     script: |
+    #       cd ~
+    #       bash bot_manager.sh restart_${{ secrets.BOT_NAME }}
