@@ -248,36 +248,11 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(show_employee_daily_report, pattern='^daily_report_'))
     application.add_handler(CallbackQueryHandler(show_current_tasks, pattern='^current_tasks$'))
 
-    # --- مدیریت کارها (سیستم جدید) ---
-    application.add_handler(CallbackQueryHandler(show_manage_tasks_new, pattern='^manage_tasks$'))
-    application.add_handler(CallbackQueryHandler(manage_by_employee, pattern='^manage_by_employee$'))
-    application.add_handler(CallbackQueryHandler(show_employee_tasks_by_category, pattern='^emp_tasks_'))
-    application.add_handler(CallbackQueryHandler(show_tasks_by_employee_category, pattern='^emp_cat_'))
-
     # --- مدیریت کارها ---
     application.add_handler(CallbackQueryHandler(show_manage_tasks_menu, pattern='^manage_tasks$'))
     application.add_handler(CallbackQueryHandler(manage_by_employee, pattern='^manage_by_employee$'))
     application.add_handler(CallbackQueryHandler(show_employee_tasks_by_category, pattern='^emp_tasks_'))
     application.add_handler(CallbackQueryHandler(show_tasks_by_employee_category, pattern='^emp_cat_'))
-
-    # بخش‌های در حال توسعه - حذف شد
-    # application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_category$'))
-    # application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_importance$'))
-    # application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_priority$'))
-    # application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_score$'))
-
-    # جزئیات و تخصیص کار
-    application.add_handler(CallbackQueryHandler(view_task_details_admin, pattern='^view_task_'))
-    application.add_handler(CallbackQueryHandler(assign_task_to_employee, pattern='^assign_task_'))
-    application.add_handler(CallbackQueryHandler(assign_task_to_employee, pattern='^reassign_task_'))
-    application.add_handler(CallbackQueryHandler(confirm_assign_task, pattern='^assign_to_'))
-    application.add_handler(CallbackQueryHandler(change_task_status, pattern='^status_'))
-
-    # بخش‌های در حال توسعه
-    application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_category$'))
-    application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_importance$'))
-    application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_priority$'))
-    application.add_handler(CallbackQueryHandler(manage_placeholder, pattern='^manage_by_score$'))
 
     # --- مدیریت کارها (سیستم قدیم - برای سازگاری) ---
     application.add_handler(CallbackQueryHandler(list_all_tasks, pattern='^list_all_tasks$'))
@@ -289,6 +264,7 @@ def main() -> None:
     application.add_handler(CallbackQueryHandler(view_task_details_admin, pattern='^view_task_'))
     application.add_handler(CallbackQueryHandler(assign_task_to_employee, pattern='^assign_task_'))
     application.add_handler(CallbackQueryHandler(assign_task_to_employee, pattern='^reassign_task_'))
+    application.add_handler(CallbackQueryHandler(confirm_assign_task, pattern='^assign_to_'))
     application.add_handler(CallbackQueryHandler(change_task_status, pattern='^status_'))
 
     # --- دسته‌بندی‌ها ---
